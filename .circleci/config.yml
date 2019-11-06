@@ -72,11 +72,11 @@ jobs:
             export PATH=`pwd`/miniconda/bin:$PATH
             source activate test-env
             echo "yes"
-            # flake8 --exclude=mdetsims/dbsim/erins_code/* mdetsims
+            flake8 coadd_mdetsims
 
-      # - run:
-      #     name: test
-      #     command: |
-      #       export PATH=`pwd`/miniconda/bin:$PATH
-      #       source activate test-env
-      #       pytest -vv mdetsims
+      - run:
+          name: test
+          command: |
+            export PATH=`pwd`/miniconda/bin:$PATH
+            source activate test-env
+            pytest -vv coadd_mdetsims
