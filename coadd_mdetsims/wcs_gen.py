@@ -14,7 +14,7 @@ def gen_affine_wcs(
         An RNG to use to generate the random WCS.
     position_angle_range : 2-tuple of floats
         The range of position angles to select from for rotating the image
-        WCS coordinares.
+        WCS coordinares. In degrees.
     dither_range : 2-tuple of floats
         The lowest and highest dither in world coordinates.
     scale : float
