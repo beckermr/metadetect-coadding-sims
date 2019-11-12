@@ -98,10 +98,15 @@ def test_coadding_sim_outputs_basic():
 
     for obslist in mbobs:
         assert obslist[0].image.shape == (227, 227)
+        assert obslist[0].noise.shape == (227, 227)
+        assert obslist[0].weight.shape == (227, 227)
+        assert obslist[0].bmask.shape == (227, 227)
+        assert obslist[0].ormask.shape == (227, 227)
         assert np.allclose(
             obslist[0].jacobian.get_galsim_wcs().pixelArea(), 0.263**2)
 
         assert obslist[0].psf.image.shape == (53, 53)
+        assert obslist[0].psf.weight.shape == (53, 53)
         assert np.allclose(
             obslist[0].psf.jacobian.get_galsim_wcs().pixelArea(), 0.263**2)
 
