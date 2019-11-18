@@ -10,6 +10,7 @@ import fitsio
 
 from .coadd import coadd_image_noise_interpfrac, coadd_psfs
 from .wcs_gen import gen_affine_wcs
+from .render_sim import render_objs_with_psf_shear
 # from .defaults import WLDEBLEND_DES_FACTOR, WLDEBLEND_LSST_FACTOR
 
 LOGGER = logging.getLogger(__name__)
@@ -348,10 +349,14 @@ class CoaddingSim(object):
         assert not self.called, "you can only call a sim object once!"
         self.called = True
 
-        all_band_obj, uv_positions = self._get_band_objects()
+        all_band_obj, uv_offsets = self._get_band_objects()
 
         method = 'auto'
         LOGGER.debug("using draw method '%s'", method)
+
+        uv_cen = galsim.PositionD(
+            x=self.im_cen * self.scale,
+            y=self.im_cen * self.scale)
 
         mbobs = ngmix.MultiBandObsList()
 
@@ -366,10 +371,19 @@ class CoaddingSim(object):
             # draw the images
             se_images = []
             for epoch, wcs in enumerate(wcs_objs):
-                se_im = self._build_se_image(
-                    band=band, epoch=epoch, wcs=wcs,
-                    band_objects=band_objects,
-                    uv_positions=uv_positions, method=method)
+                _psf_func = self._get_psf_model_function(
+                    band=band, epoch=epoch)
+                se_im = render_objs_with_psf_shear(
+                    objs=band_objects,
+                    psf_function=_psf_func,
+                    uv_offsets=uv_offsets,
+                    uv_cen=uv_cen,
+                    wcs=wcs,
+                    img_dim=self.se_dim,
+                    method=method,
+                    g1=self.g1,
+                    g2=self.g2,
+                    shear_scene=self.shear_scene)
                 se_images.append(se_im.array)
 
             if return_band_images:
@@ -419,50 +433,6 @@ class CoaddingSim(object):
             return mbobs, band_images
         else:
             return mbobs
-
-    def _build_se_image(self, *, band, epoch, wcs,
-                        band_objects, uv_positions, method):
-        se_im = galsim.ImageD(
-            nrow=self.se_dim, ncol=self.se_dim, xmin=0, ymin=0)
-
-        for obj, uv_pos in zip(band_objects, uv_positions):
-            # deal with WCS stuff
-            pos = wcs.toImage(uv_pos)
-            local_wcs = wcs.local(world_pos=uv_pos)
-
-            # get the psf
-            psf = self._get_psf_model(
-                band=band, epoch=epoch, x=pos.x, y=pos.y)
-
-            # draw with setup_only to get the image size
-            _im = galsim.Convolve(obj, psf).drawImage(
-                wcs=local_wcs,
-                method=method,
-                setup_only=True).array
-            assert _im.shape[0] == _im.shape[1]
-
-            # now get location of the stamp
-            x_ll = int(pos.x - (_im.shape[1] - 1)/2)
-            y_ll = int(pos.y - (_im.shape[0] - 1)/2)
-
-            # get the offset of the center
-            dx = pos.x - (x_ll + (_im.shape[1] - 1)/2)
-            dy = pos.y - (y_ll + (_im.shape[0] - 1)/2)
-
-            # draw and set the proper origin
-            stamp = galsim.Convolve(obj, psf).drawImage(
-                nx=_im.shape[1],
-                ny=_im.shape[0],
-                wcs=local_wcs,
-                offset=galsim.PositionD(x=dx, y=dy),
-                method=method)
-            stamp.setOrigin(x_ll, y_ll)
-
-            # intersect and add to total image
-            overlap = stamp.bounds & se_im.bounds
-            se_im[overlap] += stamp[overlap]
-
-        return se_im
 
     def _add_noise_and_coadd(self, *, band, wcs_objs, se_images):
         se_noises = []
@@ -538,8 +508,8 @@ class CoaddingSim(object):
             # now draw the SE image PSF w/ the subpixel offset
             local_wcs = wcs.local(world_pos=world_origin)
 
-            psf = self._get_psf_model(
-                band=band, epoch=epoch, x=pos.x, y=pos.y)
+            psf = self._get_psf_model_function(
+                band=band, epoch=epoch)(x=pos.x, y=pos.y)
 
             se_psfs.append(psf.drawImage(
                 nx=se_psf_dim,
@@ -643,11 +613,11 @@ class CoaddingSim(object):
         -------
         all_band_objs : list of lists
             A list of lists of objects in each band.
-        uv_positions : list of galsim.PositionD
+        uv_offsets : list of galsim.PositionD
             A list of galsim positions for each object.
         """
         all_band_obj = []
-        uv_positions = []
+        uv_offsets = []
 
         nobj = self._get_nobj()
 
@@ -657,6 +627,7 @@ class CoaddingSim(object):
         for i in range(nobj):
             # unsheared offset from center of uv image
             du, dv = self._get_dudv()
+            duv = galsim.PositionD(x=du, y=dv)
 
             # get the galaxy
             if self.gal_type == 'exp':
@@ -666,26 +637,10 @@ class CoaddingSim(object):
             else:
                 raise ValueError('gal_type "%s" not valid!' % self.gal_type)
 
-            # compute the final image position
-            if self.shear_scene:
-                sdu, sdv = np.dot(self.shear_mat, np.array([du, dv]))
-            else:
-                sdu = du
-                sdv = dv
+            all_band_obj.append(gals)
+            uv_offsets.append(duv)
 
-            pos = galsim.PositionD(
-                x=sdu + self.im_cen * self.scale,
-                y=sdv + self.im_cen * self.scale)
-
-            # shear the galaxy
-            _obj = []
-            for gal in gals:
-                _obj.append(gal.shear(g1=self.g1, g2=self.g2))
-
-            all_band_obj.append(_obj)
-            uv_positions.append(pos)
-
-        return all_band_obj, uv_positions
+        return all_band_obj, uv_offsets
 
     # def _make_ps_psfs(self):
     #     kwargs = self.psf_kws or {}
@@ -703,7 +658,7 @@ class CoaddingSim(object):
     #             )
     #         self._ps_psfs.append(band_psfs)
 
-    def _get_psf_model(self, *, band, epoch, x, y):
+    def _get_psf_model_function(self, *, band, epoch):
         if not hasattr(self, '_psf_fwhms'):
             kws = self.psf_kws or {}
             fwhm = kws.get('fwhm', 0.9)
@@ -722,21 +677,24 @@ class CoaddingSim(object):
                 self._psf_shears.append([
                     galsim.Shear(g1=g1, g2=g2) for g1, g2 in zip(g1s, g2s)])
 
-        if self.psf_type == 'gauss':
-            psf = galsim.Gaussian(
-                fwhm=self._psf_fwhms[band][epoch]
-            ).shear(
-                self._psf_shears[band][epoch])
-            return psf
-        # elif self.psf_type == 'wldeblend':
-        #     return self._surveys[band].psf_model.dilate(
-        #         self._psf_fwhms[band][epoch] / self._psf_fwhm
-        #     ).shear(
-        #         self._psf_shears[band][epoch])
-        # elif self.psf_type == 'ps':
-        #     if not hasattr(self, '_ps_psfs'):
-        #         self._make_ps_psfs()
-        #     return self._ps_psfs[band][epoch].getPSF(
-        #         galsim.PositionD(x=x, y=y))
-        else:
-            raise ValueError('psf_type "%s" not valid!' % self.psf_type)
+        def _psf_model_func(*, x, y):
+            if self.psf_type == 'gauss':
+                psf = galsim.Gaussian(
+                    fwhm=self._psf_fwhms[band][epoch]
+                ).shear(
+                    self._psf_shears[band][epoch])
+                return psf
+            # elif self.psf_type == 'wldeblend':
+            #     return self._surveys[band].psf_model.dilate(
+            #         self._psf_fwhms[band][epoch] / self._psf_fwhm
+            #     ).shear(
+            #         self._psf_shears[band][epoch])
+            # elif self.psf_type == 'ps':
+            #     if not hasattr(self, '_ps_psfs'):
+            #         self._make_ps_psfs()
+            #     return self._ps_psfs[band][epoch].getPSF(
+            #         galsim.PositionD(x=x, y=y))
+            else:
+                raise ValueError('psf_type "%s" not valid!' % self.psf_type)
+
+        return _psf_model_func
