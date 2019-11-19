@@ -53,7 +53,7 @@ GAUSS_PSF = {
     }
 }
 
-TEST_METADETECT_CONFIG = {
+METADETECT_CONFIG = {
     'weight': {
         'fwhm': 1.2,  # arcsec
     },

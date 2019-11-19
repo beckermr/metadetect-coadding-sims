@@ -1,4 +1,94 @@
 import numpy as np
+import tqdm
+
+
+def _meas_gs(d, inds, swap12):
+    if swap12:
+        return (
+            np.sum(d['g2p'][inds] * d['n2p'][inds]) / np.sum(d['n2p'][inds]),
+            np.sum(d['g2m'][inds] * d['n2m'][inds]) / np.sum(d['n2m'][inds]),
+            np.sum(d['g2'][inds] * d['n2'][inds]) / np.sum(d['n2'][inds]),
+            np.sum(d['g1p'][inds] * d['n1p'][inds]) / np.sum(d['n1p'][inds]),
+            np.sum(d['g1m'][inds] * d['n1m'][inds]) / np.sum(d['n1m'][inds]),
+            np.sum(d['g1'][inds] * d['n1'][inds]) / np.sum(d['n1'][inds]))
+    else:
+        return (
+            np.sum(d['g1p'][inds] * d['n1p'][inds]) / np.sum(d['n1p'][inds]),
+            np.sum(d['g1m'][inds] * d['n1m'][inds]) / np.sum(d['n1m'][inds]),
+            np.sum(d['g1'][inds] * d['n1'][inds]) / np.sum(d['n1'][inds]),
+            np.sum(d['g2p'][inds] * d['n2p'][inds]) / np.sum(d['n2p'][inds]),
+            np.sum(d['g2m'][inds] * d['n2m'][inds]) / np.sum(d['n2m'][inds]),
+            np.sum(d['g2'][inds] * d['n2'][inds]) / np.sum(d['n2'][inds]))
+
+
+def _meas_m_c_cancel(dp, dm, inds, swap12, step, g_true):
+    g1p_p, g1m_p, g1_p, g2p_p, g2m_p, g2_p = _meas_gs(dp, inds, swap12)
+    g1p_m, g1m_m, g1_m, g2p_m, g2m_m, g2_m = _meas_gs(dm, inds, swap12)
+
+    g1 = (g1_p - g1_m) / 2
+    R11 = (g1p_p - g1m_p + g1p_m - g1m_m) / 2 / 2 / step
+
+    g2 = (g2_p + g2_m) / 2
+    R22 = (g2p_p - g2m_p + g2p_m - g2m_m) / 2 / 2 / step
+
+    return g1 / R11 / g_true - 1, g2 / R22
+
+
+def estimate_m_and_c(
+        data_p, data_m, g_true, swap12=False, step=0.01,
+        rng=None, n_boot=500, verbose=True):
+    """Estimate m and c w/ errors via boostrapping.
+
+    Parameters
+    ----------
+    data_p : array-like
+        Array of simulation data estimated from `measure_shear_metadetect`
+        with a +g_true true shear.
+    data_m : array-like
+        Array of simulation data estimated from `measure_shear_metadetect`
+        with a -g_true true shear.
+    g_true : float
+        The true value of the shear on the 1-axis in the simulation. The other
+        axis is assumd to havea true value of zero.
+    swap12 : bool, optional
+        If True, swap the roles of the 1- and 2-axes in the computation.
+    step : float, optional
+        The step used in metadetect for estimating the response. Default is
+        0.01.
+    rng : np.random.RandomState, int or None
+        An RNG to use for drawing the objects. If an int or None is passed,
+        the input is used to initialize a new `np.random.RandomState` object.
+    n_boot : int, optional
+        The number of iterations used for estimating the bootstrap errors.
+    verbose : bool, optional
+        If True, show a progress bar. Otherwise show nothing.
+
+    Returns
+    -------
+    m : float
+        Estimate of the multiplicative bias.
+    merr : float
+        Estimat of the 1-sigma standard error in `m`.
+    c : float
+        Estimate of the additive bias.
+    cerr : float
+        Estimate of the 1-sigma standard error in `c`.
+    """
+    n_data = data_p.shape[0]
+    ms = []
+    cs = []
+    rng = (rng if isinstance(rng, np.random.RandomState)
+           else np.random.RandomState(seed=rng))
+    for _ in tqdm.trange(n_boot, total=n_boot, disable=not verbose):
+        inds = rng.choice(n_data, replace=True, size=n_data)
+        _m, _c = _meas_m_c_cancel(data_p, data_m, inds, swap12, step, g_true)
+        ms.append(_m)
+        cs.append(_c)
+
+    m, c = _meas_m_c_cancel(
+        data_p, data_m, np.arange(n_data), swap12, step, g_true)
+
+    return m, np.std(ms), c, np.std(cs)
 
 
 def measure_shear_metadetect(res, *, s2n_cut, t_ratio_cut, cut_interp):

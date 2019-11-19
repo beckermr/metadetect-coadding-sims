@@ -26,8 +26,9 @@ class CoaddingSim(object):
 
     Parameters
     ----------
-    rng : np.random.RandomState
-        An RNG to use for drawing the objects.
+    rng : np.random.RandomState, int or None
+        An RNG to use for drawing the objects. If an int or None is passed,
+        the input is used to initialize a new `np.random.RandomState` object.
     n_coadd : int, optional
         The number of single epoch images **per band** in a coadd.
     g1 : float, optional
@@ -133,23 +134,26 @@ class CoaddingSim(object):
     def __init__(
             self, *,
             rng,
-            scale,
+            scale=0.263,
             n_coadd=1,
             g1=0.02, g2=0.0,
             dim=225, buff=25,
             noise=180,
-            ngal=45.0,
+            ngal=150.0,
             ngal_factor=None,
             n_bands=1,
             shear_scene=True,
             wcs_kws=None,
             gal_grid=None,
-            gal_type,
+            gal_type='exp',
             gal_kws=None,
-            psf_type,
+            psf_type='gauss',
             psf_kws=None):
-        self.rng = rng
-        self.noise_rng = np.random.RandomState(seed=rng.randint(1, 2**32-1))
+        self.rng = (
+            rng if isinstance(rng, np.random.RandomState)
+            else np.random.RandomState(seed=rng))
+        self.noise_rng = np.random.RandomState(
+            seed=self.rng.randint(1, 2**32-1))
         self.gal_type = gal_type
         self.psf_type = psf_type
         self.n_coadd = n_coadd
