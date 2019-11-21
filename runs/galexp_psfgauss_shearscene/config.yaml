@@ -1,0 +1,6 @@
+sim:
+  gal_type: exp
+  psf_type: gauss
+  shear_scene: True
+  n_coadd: 1
+  scale: 0.263

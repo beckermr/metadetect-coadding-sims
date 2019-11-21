@@ -54,7 +54,11 @@ jobs:
               scikit-learn \
               esutil \
               meds \
-              pylbfgs
+              pylbfgs \
+              pyyaml \
+              schwimmbad \
+              click \
+              sep
             conda update --all -y -q
             pip install git+https://github.com/esheldon/metadetect.git \
               --force-reinstall --no-deps --no-cache-dir
@@ -80,3 +84,11 @@ jobs:
             export PATH=`pwd`/miniconda/bin:$PATH
             source activate test-env
             pytest -vv coadd_mdetsims
+
+      - run:
+          name: sim
+          command: |
+            export PATH=`pwd`/miniconda/bin:$PATH
+            source activate test-env
+            cd runs/galexp_psfgauss_shearscene
+            coadd-mdetsims-run-sims 10

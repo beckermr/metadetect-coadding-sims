@@ -86,3 +86,6 @@ WLDEBLEND_DES_FACTOR = 0.45
 WLDEBLEND_LSST_FACTOR = 0.4
 
 METACAL_TYPES = ['noshear', '1p', '1m', '2p', '2m']
+
+S2N_CUTS = [10, 15, 20]
+T_RATIO_CUT = 1.2

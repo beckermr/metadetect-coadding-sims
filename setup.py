@@ -4,4 +4,5 @@ setup(
     name="coadd_mdetsims",
     version="0.1",
     packages=find_packages(),
+    scripts=['scripts/coadd-mdetsims-run-sims']
 )
