@@ -76,40 +76,39 @@ def main():
 
     with open(script_name, 'w') as fp:
         fp.write("""\
-    #!/bin/bash
+#!/bin/bash
 
-    export OMP_NUM_THREADS=1
+export OMP_NUM_THREADS=1
 
-    if [[ -n $_CONDOR_SCRATCH_DIR ]]; then
-        # the condor system creates a scratch directory for us,
-        # and cleans up afterward
-        tmpdir=$_CONDOR_SCRATCH_DIR
-        export TMPDIR=$tmpdir
-    else
-        # otherwise use the TMPDIR
-        tmpdir='.'
-        mkdir -p $tmpdir
-    fi
+if [[ -n $_CONDOR_SCRATCH_DIR ]]; then
+    # the condor system creates a scratch directory for us,
+    # and cleans up afterward
+    tmpdir=$_CONDOR_SCRATCH_DIR
+    export TMPDIR=$tmpdir
+else
+    # otherwise use the TMPDIR
+    tmpdir='.'
+    mkdir -p $tmpdir
+fi
 
-    source activate bnl
+source activate bnl
 
-    echo `which python`
+echo `which python`
 
-    # change to correct dir just to be sure
-    cd $3/..
+# change to correct dir just to be sure
+cd $3/..
 
-    # about 1 to 1.6 hours per job
-    # args are nsims, seed, odir
-    coadd-mdetsims-run-sims \\
-      --seed=$2 \\
-      --output-file=${tmpdir}/data_${2}.fits \\
-      --serial \\
-      $1 >& ${tmpdir}/log_${2}.oe
+# about 1 to 1.6 hours per job
+# args are nsims, seed, odir
+coadd-mdetsims-run-sims \\
+  --seed=$2 \\
+  --output-file=${tmpdir}/data_${2}.fits \\
+  --serial \\
+  $1 >& ${tmpdir}/log_${2}.oe
 
-    mv ${tmpdir}/log_${2}.oe $3/logs/.
-    mv ${tmpdir}/data_${2}.fits $3/.
-
-    """)
+mv ${tmpdir}/log_${2}.oe $3/logs/.
+mv ${tmpdir}/data_${2}.fits $3/.
+""")
 
     os.system('chmod u+x %s' % script_name)
 
