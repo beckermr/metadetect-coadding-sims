@@ -144,7 +144,7 @@ def _run_sim(seed, *, sim_config, shear_meas_config, swap12, cut_interp):
 @click.option('--serial', is_flag=True, default=False, type=bool,
               help="Run all sims serially.")
 @click.argument('n_sims', type=int)
-def _main(n_sims, seed, output_file, serial):
+def main(n_sims, seed, output_file, serial):
     """Run N_SIMS metadetect simulation patches and estimate the shear."""
 
     # logging and MPI/workers
@@ -223,7 +223,3 @@ s2n: {s2n}
             for s in ['p', 'm']:
                 ext = '%s%d' % (s, s2n)
                 fits.write(all_data[ext], extname=ext)
-
-
-if __name__ == '__main__':
-    _main()
