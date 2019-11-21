@@ -6,4 +6,4 @@ sim:
   scale: 0.263
 
 run:
-  n_patches: 100000
+  n_patches: 1000000
