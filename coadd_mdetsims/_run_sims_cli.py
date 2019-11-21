@@ -182,7 +182,7 @@ def main(n_sims, seed, output_file, serial):
     else:
         if not use_mpi:
             pool = schwimmbad.JoblibPool(
-                n_workers, backend='multiprocessing', verbose=20)
+                n_workers, backend='multiprocessing', verbose=40)
         else:
             pool = schwimmbad.choose_pool(mpi=use_mpi, processes=n_workers)
 
