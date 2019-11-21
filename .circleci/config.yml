@@ -91,4 +91,4 @@ jobs:
             export PATH=`pwd`/miniconda/bin:$PATH
             source activate test-env
             cd runs/galexp_psfgauss_shearscene
-            coadd-mdetsims-run-sims 10
+            coadd-mdetsims-run-sims 100
