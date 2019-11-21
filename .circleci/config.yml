@@ -57,7 +57,8 @@ jobs:
               pylbfgs \
               pyyaml \
               schwimmbad \
-              click
+              click \
+              sep
             conda update --all -y -q
             pip install git+https://github.com/esheldon/metadetect.git \
               --force-reinstall --no-deps --no-cache-dir
@@ -91,4 +92,3 @@ jobs:
             source activate test-env
             cd runs/galexp_psfgauss_shearscene
             coadd-mdetsims-run-sims 10
-            
