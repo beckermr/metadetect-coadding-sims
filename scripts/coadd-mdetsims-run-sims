@@ -141,7 +141,7 @@ def _run_sim(seed, *, sim_config, shear_meas_config, swap12, cut_interp):
               help='RNG seed to init the sims.')
 @click.option('--output-file', default='data.fits', type=str,
               help='File to write outputs to.')
-@click.options('--serial', is_flag=True, default=False, type=bool,
+@click.option('--serial', is_flag=True, default=False, type=bool,
                help="Run all sims serially.")
 @click.argument('n_sims', type=int)
 def _main(n_sims, seed, output_file, serial):
