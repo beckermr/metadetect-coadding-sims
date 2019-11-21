@@ -69,6 +69,8 @@ def main():
     except Exception:
         pass
 
+    os.system('rm -rf condor_scripts/*')
+
     script_name = os.path.join(cwd, "condor_scripts/job_condor.sh")
     output_dir = os.path.join(cwd, "condor_outputs")
 
