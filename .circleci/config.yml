@@ -77,6 +77,7 @@ jobs:
             source activate test-env
             echo "yes"
             flake8 coadd_mdetsims
+            flake8 scripts/*
 
       - run:
           name: test
