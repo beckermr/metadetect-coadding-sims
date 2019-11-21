@@ -105,3 +105,5 @@ venv.bak/
 
 # data
 *.fits
+runs/*/condor_outputs
+runs/*/condor_scripts
