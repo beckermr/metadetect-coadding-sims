@@ -4,3 +4,6 @@ sim:
   shear_scene: True
   n_coadd: 1
   scale: 0.263
+
+run:
+  n_patches: 100000
