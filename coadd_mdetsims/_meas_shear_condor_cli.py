@@ -15,10 +15,10 @@ def _func(fname):
         with fitsio.FITS(fname, 'r') as fits:
             for s2n in S2N_CUTS:
                 ext = '%s%d' % ('p', s2n)
-                pres[ext] = fits[ext].read()
+                pres[s2n] = fits[ext].read()
 
                 ext = '%s%d' % ('m', s2n)
-                mres[ext] = fits[ext].read()
+                mres[s2n] = fits[ext].read()
         return (pres, mres)
     except Exception:
         return None
