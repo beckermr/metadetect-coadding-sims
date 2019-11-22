@@ -1,5 +1,8 @@
+import logging
 import numpy as np
 import galsim
+
+LOGGER = logging.getLogger(__name__)
 
 
 def gen_affine_wcs(
@@ -65,6 +68,10 @@ def gen_affine_wcs(
     dvdx = jac_matrix[1, 0]
     dvdy = jac_matrix[1, 1]
     dxdy = np.dot(np.linalg.inv(jac_matrix), np.array([dither_u, dither_v]))
+
+    LOGGER.debug(
+        'making WCS with g1|g2|scale|theta|du|dv: % f|% f|% f|% f|% f|% f',
+        g1, g2, scale, theta, dither_u, dither_v)
 
     return galsim.AffineTransform(
         dudx, dudy, dvdx, dvdy,

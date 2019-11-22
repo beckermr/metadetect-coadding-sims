@@ -439,6 +439,8 @@ class CoaddingSim(object):
             return mbobs
 
     def _add_noise_and_coadd(self, *, band, wcs_objs, se_images):
+        LOGGER.info('coadding %d images for band %d',
+                    len(se_images), band)
         se_noises = []
         se_interp_fracs = []
         coadd_wgts = []
@@ -522,6 +524,9 @@ class CoaddingSim(object):
                 method=method,
                 offset=galsim.PositionD(x=dx, y=dy)).array.copy())
 
+        LOGGER.info('coadding %d PSF images for band %d',
+                    len(se_psfs), band)
+
         coadd_psf = coadd_psfs(
             se_psfs, psf_wcs_objs, coadd_wgts,
             self.scale, self._psf_dim)
@@ -537,6 +542,8 @@ class CoaddingSim(object):
                 dither_range=(0, 0))
             if self.wcs_kws is not None:
                 default_wcs_kws.update(self.wcs_kws)
+
+            LOGGER.info('using WCS kwargs %s', default_wcs_kws)
 
             se_cen = (self.se_dim - 1) / 2
             world_origin = galsim.PositionD(
@@ -558,6 +565,9 @@ class CoaddingSim(object):
                     ))
 
                 self._band_wcs_objs.append(wcs_objs)
+
+        LOGGER.info('found %d WCS objects for band %d',
+                    len(self._band_wcs_objs[band]), band)
 
         return self._band_wcs_objs[band]
 
@@ -624,6 +634,9 @@ class CoaddingSim(object):
         uv_offsets = []
 
         nobj = self._get_nobj()
+
+        LOGGER.info('drawing %d objects for a %f square arcmin patch',
+                    nobj, self.area_sqr_arcmin)
 
         if self.gal_grid is not None:
             self._gal_grid_ind = 0
