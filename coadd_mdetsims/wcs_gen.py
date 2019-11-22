@@ -16,7 +16,7 @@ def gen_affine_wcs(
         The range of position angles to select from for rotating the image
         WCS coordinares. In degrees.
     dither_range : 2-tuple of floats
-        The lowest and highest dither in world coordinates.
+        The lowest and highest dither in world coordinate pixels.
     scale : float
         The mean pixel scale of the image,
     scale_frac_std : float

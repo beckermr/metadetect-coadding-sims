@@ -1,0 +1,9 @@
+sim:
+  gal_type: exp
+  psf_type: gauss
+  shear_scene: True
+  n_coadd: 5
+  scale: 0.263
+
+run:
+  n_patches: 1000000
