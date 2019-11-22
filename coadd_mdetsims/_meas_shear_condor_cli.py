@@ -47,7 +47,7 @@ def main():
         m, msd, c, csd = estimate_m_and_c(
                 data_p, data_m, 0.02, swap12=swap12, step=0.01,
                 rng=np.random.RandomState(seed=42),
-                n_boot=500, verbose=False)
+                n_boot=500, verbose=True)
 
         print("""\
 s2n: {s2n}
