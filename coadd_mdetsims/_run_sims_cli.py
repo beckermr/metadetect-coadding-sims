@@ -21,7 +21,7 @@ LOGGER = logging.getLogger(__name__)
 
 def _deal_with_logging(n_sims):
     if n_sims == 1:
-        for lib in [__name__, 'ngmix', 'metadetect', 'mdetsims']:
+        for lib in [__name__, 'ngmix', 'metadetect', 'coadd_mdetsims']:
             lgr = logging.getLogger(lib)
             hdr = logging.StreamHandler(sys.stdout)
             hdr.setFormatter(logging.Formatter(logging.BASIC_FORMAT))
