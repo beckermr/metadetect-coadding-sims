@@ -398,6 +398,8 @@ class CoaddingSim(object):
              coadd_bmask, coadd_wgts) = self._add_noise_and_coadd(
                 band=band, wcs_objs=wcs_objs, se_images=se_images)
 
+            LOGGER.debug("coadd weights for band %d: %s", band, coadd_wgts)
+
             # coadd the PSFs
             coadd_psf = self._coadd_psfs(
                 band=band, wcs_objs=wcs_objs,
