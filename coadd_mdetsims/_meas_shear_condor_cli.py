@@ -1,3 +1,4 @@
+import click
 import glob
 import fitsio
 import joblib
@@ -21,29 +22,37 @@ def _resum_cols(d):
     return d[0:1]
 
 
-def _func(fname):
+def _func(fname, patch_bootstrap):
     try:
         pres = {}
         mres = {}
         with fitsio.FITS(fname, 'r') as fits:
             for s2n in S2N_CUTS:
                 ext = '%s%d' % ('p', s2n)
-                pres[s2n] = _resum_cols(fits[ext].read())
+                pres[s2n] = fits[ext].read()
 
                 ext = '%s%d' % ('m', s2n)
-                mres[s2n] = _resum_cols(fits[ext].read())
+                mres[s2n] = fits[ext].read()
+
+                if not patch_bootstrap:
+                    pres[s2n] = _resum_cols(pres[s2n])
+                    mres[s2n] = _resum_cols(mres[s2n])
+
         return (pres, mres)
     except Exception:
         return None
 
 
-def main():
+@click.command()
+@click.option('--patch-bootstrap', is_flag=True, default=False, type=bool,
+              help="Bootstrap over patches instead of sets of patches.")
+def main(patch_bootstrap):
     tmpdir = 'condor_outputs'
     _, _, _, swap12, _ = load_config('config.yaml')
 
     files = glob.glob('%s/data*.fits' % tmpdir)
     print('found %d outputs' % len(files))
-    io = [joblib.delayed(_func)(fname) for fname in files]
+    io = [joblib.delayed(_func)(fname, patch_bootstrap) for fname in files]
     outputs = joblib.Parallel(
         verbose=10,
         n_jobs=-1,
