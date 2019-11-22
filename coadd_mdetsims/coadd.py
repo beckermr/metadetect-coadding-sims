@@ -42,9 +42,10 @@ def coadd_psfs(
 
     for se_psf, se_wcs, wgt in zip(se_psfs, se_wcs_objs, wgts):
         se_x, se_y = se_wcs.toImage(u, v)
-        im, _ = lanczos_resample_one(se_psf / se_wcs.pixelArea(), se_y, se_x)
+        # im, _ = lanczos_resample_one(se_psf / se_wcs.pixelArea(), se_y, se_x)
+        im, _ = lanczos_resample_one(se_psf, se_y, se_x)
         coadd_image += (im.reshape((coadd_dim, coadd_dim)) * wgt)
-    coadd_image *= (coadd_scale**2)
+    # coadd_image *= (coadd_scale**2)
 
     return coadd_image
 
@@ -97,8 +98,8 @@ def coadd_image_noise_interpfrac(
 
         se_x, se_y = se_wcs.toImage(u, v)
         im, nse, intp, _ = lanczos_resample_three(
-            se_im / se_wcs.pixelArea(),
-            se_nse / se_wcs.pixelArea(),
+            se_im,  # / se_wcs.pixelArea(),
+            se_nse,  # / se_wcs.pixelArea(),
             se_intp,
             se_y,
             se_x)
@@ -107,7 +108,7 @@ def coadd_image_noise_interpfrac(
         coadd_noise += (nse.reshape((coadd_dim, coadd_dim)) * wgt)
         coadd_intp += (intp.reshape((coadd_dim, coadd_dim)) * wgt)
 
-    coadd_image *= (coadd_scale**2)
-    coadd_noise *= (coadd_scale**2)
+    # coadd_image *= (coadd_scale**2)
+    # coadd_noise *= (coadd_scale**2)
 
     return coadd_image, coadd_noise, coadd_intp
