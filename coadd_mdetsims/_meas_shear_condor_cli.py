@@ -4,7 +4,8 @@ import fitsio
 import joblib
 import numpy as np
 
-from coadd_mdetsims.shear_bias_meas import estimate_m_and_c
+from coadd_mdetsims.shear_bias_meas import (
+    estimate_m_and_c, estimate_m_and_c_patch_avg)
 from coadd_mdetsims.config import load_config
 from coadd_mdetsims.defaults import S2N_CUTS
 
@@ -44,9 +45,11 @@ def _func(fname, patch_bootstrap):
 
 
 @click.command()
+@click.option('--patch-avg', is_flag=True, default=False, type=bool,
+              help="Estimate m and c from the mean shrear of the patches.")
 @click.option('--patch-bootstrap', is_flag=True, default=False, type=bool,
               help="Bootstrap over patches instead of sets of patches.")
-def main(patch_bootstrap):
+def main(patch_bootstrap, patch_avg):
     tmpdir = 'condor_outputs'
     _, _, _, swap12, _ = load_config('config.yaml')
 
@@ -73,10 +76,16 @@ def main(patch_bootstrap):
         data_p = np.concatenate([p[s2n] for p in pres])
         data_m = np.concatenate([m[s2n] for m in mres])
 
-        m, msd, c, csd = estimate_m_and_c(
-                data_p, data_m, 0.02, swap12=swap12, step=0.01,
-                rng=np.random.RandomState(seed=42),
-                n_boot=500, verbose=True)
+        if patch_avg:
+            m, msd, c, csd = estimate_m_and_c_patch_avg(
+                    data_p, data_m, 0.02, swap12=swap12, step=0.01,
+                    rng=np.random.RandomState(seed=42),
+                    n_boot=500, verbose=True)
+        else:
+            m, msd, c, csd = estimate_m_and_c(
+                    data_p, data_m, 0.02, swap12=swap12, step=0.01,
+                    rng=np.random.RandomState(seed=42),
+                    n_boot=500, verbose=True)
 
         print("""\
 s2n: {s2n}
