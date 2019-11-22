@@ -52,6 +52,9 @@ def main(patch_bootstrap):
 
     files = glob.glob('%s/data*.fits' % tmpdir)
     print('found %d outputs' % len(files))
+    if len(files) == 0:
+        return
+
     io = [joblib.delayed(_func)(fname, patch_bootstrap) for fname in files]
     outputs = joblib.Parallel(
         verbose=10,
@@ -60,6 +63,10 @@ def main(patch_bootstrap):
         max_nbytes=None)(io)
 
     outputs = [o for o in outputs if o is not None]
+    print('found %d non-None outputs' % len(outputs))
+    if len(outputs) == 0:
+        return
+
     pres, mres = zip(*outputs)
 
     for s2n in S2N_CUTS:
