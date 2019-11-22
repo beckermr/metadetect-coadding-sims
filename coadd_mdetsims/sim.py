@@ -696,12 +696,16 @@ class CoaddingSim(object):
                 self._psf_shears.append([
                     galsim.Shear(g1=g1, g2=g2) for g1, g2 in zip(g1s, g2s)])
 
+        LOGGER.debug('PSF fwhms for band %d: %s', band, self._psf_fwhms)
+        LOGGER.debug('PSF shears for band %d: %s', band, self._psf_shears)
+
         def _psf_model_func(*, x, y):
             if self.psf_type == 'gauss':
                 psf = galsim.Gaussian(
                     fwhm=self._psf_fwhms[band][epoch]
                 ).shear(
-                    self._psf_shears[band][epoch])
+                    self._psf_shears[band][epoch]
+                ).withFlux(1.0)
                 return psf
             # elif self.psf_type == 'wldeblend':
             #     return self._surveys[band].psf_model.dilate(
