@@ -8,6 +8,19 @@ from coadd_mdetsims.config import load_config
 from coadd_mdetsims.defaults import S2N_CUTS
 
 
+def _resum_cols(d):
+    for col in ['1p', '1m', '1', '2p', '2m', '2']:
+        gcol = 'g%s' % col
+        ncol = 'n%s' % col
+        d[gcol][0] = np.sum(d[gcol] * d[ncol]) / np.sum(d[ncol])
+
+    for col in ['1p', '1m', '1', '2p', '2m', '2']:
+        ncol = 'n%s' % col
+        d[ncol][0] = np.sum(d[ncol])
+
+    return d[0:1]
+
+
 def _func(fname):
     try:
         pres = {}
@@ -15,10 +28,10 @@ def _func(fname):
         with fitsio.FITS(fname, 'r') as fits:
             for s2n in S2N_CUTS:
                 ext = '%s%d' % ('p', s2n)
-                pres[s2n] = fits[ext].read()
+                pres[s2n] = _resum_cols(fits[ext].read())
 
                 ext = '%s%d' % ('m', s2n)
-                mres[s2n] = fits[ext].read()
+                mres[s2n] = _resum_cols(fits[ext].read())
         return (pres, mres)
     except Exception:
         return None
