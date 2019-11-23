@@ -10,6 +10,7 @@ from functools import partial
 import fitsio
 
 from coadd_mdetsims.sim import CoaddingSim
+from coadd_mdetsims.simple_sim import SimpleSim
 from coadd_mdetsims.shear_bias_meas import (
     estimate_m_and_c, measure_shear_metadetect)
 from coadd_mdetsims.config import load_config
@@ -17,6 +18,11 @@ from coadd_mdetsims.defaults import T_RATIO_CUT, S2N_CUTS
 from metadetect.metadetect import Metadetect
 
 LOGGER = logging.getLogger(__name__)
+
+if True:
+    SIM = SimpleSim
+else:
+    SIM = CoaddingSim
 
 
 def _deal_with_logging(n_sims):
@@ -81,7 +87,7 @@ def _run_sim(seed, *, sim_config, shear_meas_config, swap12, cut_interp):
         else:
             assert sim_config['g1'] == 0.02
             assert sim_config['g2'] == 0.0
-        sim = CoaddingSim(rng=rng, **sim_config)
+        sim = SIM(rng=rng, **sim_config)
 
         mbobs = sim.get_mbobs()
         md = Metadetect(shear_meas_config, mbobs, rng)
@@ -109,7 +115,7 @@ def _run_sim(seed, *, sim_config, shear_meas_config, swap12, cut_interp):
         else:
             assert sim_config['g1'] == -0.02
             assert sim_config['g2'] == 0.0
-        sim = CoaddingSim(rng=rng, **sim_config)
+        sim = SIM(rng=rng, **sim_config)
 
         mbobs = sim.get_mbobs()
         md = Metadetect(shear_meas_config, mbobs, rng)
