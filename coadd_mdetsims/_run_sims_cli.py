@@ -19,10 +19,12 @@ from metadetect.metadetect import Metadetect
 
 LOGGER = logging.getLogger(__name__)
 
-if True:
+if False:
     SIM = SimpleSim
+    LOGGER.info('using straight-to-coadd sims')
 else:
     SIM = CoaddingSim
+    LOGGER.info('using full coadding sims')
 
 
 def _deal_with_logging(n_sims):
