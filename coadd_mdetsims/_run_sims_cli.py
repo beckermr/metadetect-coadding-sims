@@ -177,9 +177,9 @@ def main(n_sims, seed, output_file, serial):
         print("n_workers:", n_workers, flush=True)
 
         if isinstance(SIM, SimpleSim):
-            LOGGER.info('using straight-to-coadd sims')
+            print('sim type: straight-to-coadd')
         else:
-            LOGGER.info('using full coadding sims')
+            print('sim type: full coadding')
 
     seeds = np.random.RandomState(seed=seed).randint(
         low=1,
