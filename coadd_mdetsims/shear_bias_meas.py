@@ -246,12 +246,12 @@ def measure_shear_metadetect(res, *, s2n_cut, t_ratio_cut, cut_interp):
                 (dta['wmom_T_ratio'] > t_ratio_cut))
 
     data = np.zeros(1, dtype=[
-        ('g1p', 'f4'), ('n1p', 'f4'),
-        ('g1m', 'f4'), ('n1m', 'f4'),
-        ('g1', 'f4'), ('n1', 'f4'),
-        ('g2p', 'f4'), ('n2p', 'f4'),
-        ('g2m', 'f4'), ('n2m', 'f4'),
-        ('g2', 'f4'), ('n2', 'f4'),
+        ('g1p', 'f8'), ('n1p', 'f8'),
+        ('g1m', 'f8'), ('n1m', 'f8'),
+        ('g1', 'f8'), ('n1', 'f8'),
+        ('g2p', 'f8'), ('n2p', 'f8'),
+        ('g2m', 'f8'), ('n2m', 'f8'),
+        ('g2', 'f8'), ('n2', 'f8'),
         ])
 
     op = res['1p']
