@@ -21,10 +21,8 @@ LOGGER = logging.getLogger(__name__)
 
 if False:
     SIM = SimpleSim
-    LOGGER.info('using straight-to-coadd sims')
 else:
     SIM = CoaddingSim
-    LOGGER.info('using full coadding sims')
 
 
 def _deal_with_logging(n_sims):
@@ -177,6 +175,11 @@ def main(n_sims, seed, output_file, serial):
         print('use mpi:', use_mpi, flush=True)
         print("n_ranks:", n_ranks, flush=True)
         print("n_workers:", n_workers, flush=True)
+
+        if isinstance(SIM, SimpleSim):
+            LOGGER.info('using straight-to-coadd sims')
+        else:
+            LOGGER.info('using full coadding sims')
 
     seeds = np.random.RandomState(seed=seed).randint(
         low=1,
