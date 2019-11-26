@@ -181,6 +181,9 @@ def main(n_sims, seed, output_file, serial):
 
         if use_old_sim:
             print('sim type: straight-to-coadd')
+            assert False, (
+                "Straight-to-coadd sims are disbaled for safety! Remove this "
+                "assert if you actually want to use it!")
         else:
             print('sim type: full coadding')
 
