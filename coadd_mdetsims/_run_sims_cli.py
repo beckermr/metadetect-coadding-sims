@@ -19,10 +19,10 @@ from metadetect.metadetect import Metadetect
 
 LOGGER = logging.getLogger(__name__)
 
-if False:
-    SIM = SimpleSim
-else:
-    SIM = CoaddingSim
+# if False:
+#     SIM = SimpleSim
+# else:
+SIM = CoaddingSim
 
 
 def _deal_with_logging(n_sims):

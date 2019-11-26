@@ -139,7 +139,7 @@ class CoaddingSim(object):
             g1=0.02, g2=0.0,
             dim=225, buff=25,
             noise=180,
-            ngal=150.0,
+            ngal=45.0,
             ngal_factor=None,
             n_bands=1,
             shear_scene=True,
