@@ -23,7 +23,7 @@ LOGGER = logging.getLogger(__name__)
 #     SIM = SimpleSim
 # else:
 SIM = CoaddingSim
-
+SIM = SimpleSim
 
 def _deal_with_logging(n_sims):
     if n_sims == 1:
