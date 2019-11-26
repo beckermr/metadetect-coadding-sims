@@ -157,7 +157,7 @@ def main(n_sims, seed, output_file, serial):
     (sim_config, run_config, shear_meas_config,
      swap12, cut_interp) = load_config('config.yaml')
 
-    use_old_sim = sim_config.pop('straight_to_coadd', False)
+    use_old_sim = True  # sim_config.pop('straight_to_coadd', False)
     if use_old_sim:
         sim_class = SimpleSim
     else:
