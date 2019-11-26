@@ -152,7 +152,7 @@ class SimpleSim(object):
             g1=0.02, g2=0.0,
             dim=225, buff=25,
             noise=180,
-            ngal=140.0,
+            ngal=45.0,
             n_bands=1,
             gal_grid=None,
             psf_kws=None,

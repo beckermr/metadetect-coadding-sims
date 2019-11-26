@@ -1,6 +1,6 @@
 import numpy as np
 
-# from .lanczos import lanczos_resample_one, lanczos_resample_three
+from .lanczos import lanczos_resample_one, lanczos_resample_three
 
 
 def coadd_psfs(
@@ -32,23 +32,19 @@ def coadd_psfs(
     """
 
     # coadd pixel coords
-    # y, x = np.mgrid[0:coadd_dim, 0:coadd_dim]
-    # u = x.ravel() * coadd_scale
-    # v = y.ravel() * coadd_scale
+    y, x = np.mgrid[0:coadd_dim, 0:coadd_dim]
+    u = x.ravel() * coadd_scale
+    v = y.ravel() * coadd_scale
 
     coadd_image = np.zeros((coadd_dim, coadd_dim), dtype=np.float64)
 
     wgts = coadd_wgts / np.sum(coadd_wgts)
 
-    # for se_psf, se_wcs, wgt in zip(se_psfs, se_wcs_objs, wgts):
-    #     se_x, se_y = se_wcs.toImage(u, v)
-    #     im, _ = lanczos_resample_one(se_psf / se_wcs.pixelArea(), se_y, se_x)
-    #     coadd_image += (im.reshape((coadd_dim, coadd_dim)) * wgt)
-    # coadd_image *= (coadd_scale**2)
-
-    cut = (se_psfs[0].shape[0] - coadd_dim) // 2
-    for se_im, wgt in zip(se_psfs, wgts):
-        coadd_image += (se_im[cut:-cut, cut:-cut] * wgt)
+    for se_psf, se_wcs, wgt in zip(se_psfs, se_wcs_objs, wgts):
+        se_x, se_y = se_wcs.toImage(u, v)
+        im, _ = lanczos_resample_one(se_psf / se_wcs.pixelArea(), se_y, se_x)
+        coadd_image += (im.reshape((coadd_dim, coadd_dim)) * wgt)
+    coadd_image *= (coadd_scale**2)
 
     return coadd_image
 
@@ -86,9 +82,9 @@ def coadd_image_noise_interpfrac(
     """
 
     # coadd pixel coords
-    # y, x = np.mgrid[0:coadd_dim, 0:coadd_dim]
-    # u = x.ravel() * coadd_scale
-    # v = y.ravel() * coadd_scale
+    y, x = np.mgrid[0:coadd_dim, 0:coadd_dim]
+    u = x.ravel() * coadd_scale
+    v = y.ravel() * coadd_scale
 
     coadd_image = np.zeros((coadd_dim, coadd_dim), dtype=np.float64)
     coadd_noise = np.zeros((coadd_dim, coadd_dim), dtype=np.float64)
@@ -96,29 +92,22 @@ def coadd_image_noise_interpfrac(
 
     wgts = coadd_wgts / np.sum(coadd_wgts)
 
-    # for se_im, se_nse, se_intp, se_wcs, wgt in zip(
-    #         se_images, se_noises, se_interp_fracs, se_wcs_objs, wgts):
-    #
-    #     se_x, se_y = se_wcs.toImage(u, v)
-    #     im, nse, intp, _ = lanczos_resample_three(
-    #         se_im / se_wcs.pixelArea(),
-    #         se_nse / se_wcs.pixelArea(),
-    #         se_intp,
-    #         se_y,
-    #         se_x)
-    #
-    #     coadd_image += (im.reshape((coadd_dim, coadd_dim)) * wgt)
-    #     coadd_noise += (nse.reshape((coadd_dim, coadd_dim)) * wgt)
-    #     coadd_intp += (intp.reshape((coadd_dim, coadd_dim)) * wgt)
-    #
-    # coadd_image *= (coadd_scale**2)
-    # coadd_noise *= (coadd_scale**2)
+    for se_im, se_nse, se_intp, se_wcs, wgt in zip(
+            se_images, se_noises, se_interp_fracs, se_wcs_objs, wgts):
 
-    cut = (se_images[0].shape[0] - coadd_dim) // 2
-    for se_im, se_nse, se_intp, wgt in zip(
-            se_images, se_noises, se_interp_fracs, wgts):
-        coadd_image += (se_im[cut:-cut, cut:-cut] * wgt)
-        coadd_noise += (se_nse[cut:-cut, cut:-cut] * wgt)
-        coadd_intp += (se_intp[cut:-cut, cut:-cut] * wgt)
+        se_x, se_y = se_wcs.toImage(u, v)
+        im, nse, intp, _ = lanczos_resample_three(
+            se_im / se_wcs.pixelArea(),
+            se_nse / se_wcs.pixelArea(),
+            se_intp,
+            se_y,
+            se_x)
+
+        coadd_image += (im.reshape((coadd_dim, coadd_dim)) * wgt)
+        coadd_noise += (nse.reshape((coadd_dim, coadd_dim)) * wgt)
+        coadd_intp += (intp.reshape((coadd_dim, coadd_dim)) * wgt)
+
+    coadd_image *= (coadd_scale**2)
+    coadd_noise *= (coadd_scale**2)
 
     return coadd_image, coadd_noise, coadd_intp
