@@ -19,11 +19,6 @@ from metadetect.metadetect import Metadetect
 
 LOGGER = logging.getLogger(__name__)
 
-# if False:
-#     SIM = SimpleSim
-# else:
-SIM = CoaddingSim
-SIM = SimpleSim
 
 def _deal_with_logging(n_sims):
     if n_sims == 1:
@@ -76,7 +71,8 @@ def _add_shears(cfg, swap12, plus=True):
     cfg.update({'g1': g1, 'g2': g2})
 
 
-def _run_sim(seed, *, sim_config, shear_meas_config, swap12, cut_interp):
+def _run_sim(seed, *, sim_config, shear_meas_config,
+             swap12, cut_interp, sim_class):
     try:
         # pos shear
         rng = np.random.RandomState(seed=seed)
@@ -87,7 +83,7 @@ def _run_sim(seed, *, sim_config, shear_meas_config, swap12, cut_interp):
         else:
             assert sim_config['g1'] == 0.02
             assert sim_config['g2'] == 0.0
-        sim = SIM(rng=rng, **sim_config)
+        sim = sim_class(rng=rng, **sim_config)
 
         mbobs = sim.get_mbobs()
         md = Metadetect(shear_meas_config, mbobs, rng)
@@ -115,7 +111,7 @@ def _run_sim(seed, *, sim_config, shear_meas_config, swap12, cut_interp):
         else:
             assert sim_config['g1'] == -0.02
             assert sim_config['g2'] == 0.0
-        sim = SIM(rng=rng, **sim_config)
+        sim = sim_class(rng=rng, **sim_config)
 
         mbobs = sim.get_mbobs()
         md = Metadetect(shear_meas_config, mbobs, rng)
@@ -161,12 +157,19 @@ def main(n_sims, seed, output_file, serial):
     (sim_config, run_config, shear_meas_config,
      swap12, cut_interp) = load_config('config.yaml')
 
+    use_old_sim = sim_config.pop('straight_to_coadd', False)
+    if use_old_sim:
+        sim_class = SimpleSim
+    else:
+        sim_class = CoaddingSim
+
     __run_sim = partial(
         _run_sim,
         sim_config=sim_config,
         shear_meas_config=shear_meas_config,
         swap12=swap12,
-        cut_interp=cut_interp)
+        cut_interp=cut_interp,
+        sim_class=sim_class)
 
     if rank == 0:
         print('running metadetect', flush=True)
@@ -176,7 +179,7 @@ def main(n_sims, seed, output_file, serial):
         print("n_ranks:", n_ranks, flush=True)
         print("n_workers:", n_workers, flush=True)
 
-        if isinstance(SIM, SimpleSim):
+        if use_old_sim:
             print('sim type: straight-to-coadd')
         else:
             print('sim type: full coadding')
