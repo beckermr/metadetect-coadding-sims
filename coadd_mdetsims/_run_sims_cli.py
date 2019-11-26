@@ -10,6 +10,7 @@ from functools import partial
 import fitsio
 
 from coadd_mdetsims.sim import CoaddingSim
+from coadd_mdetsims.simple_sim import SimpleSim
 from coadd_mdetsims.shear_bias_meas import (
     estimate_m_and_c, measure_shear_metadetect)
 from coadd_mdetsims.config import load_config
@@ -21,7 +22,7 @@ LOGGER = logging.getLogger(__name__)
 
 def _deal_with_logging(n_sims):
     if n_sims == 1:
-        for lib in [__name__, 'ngmix', 'metadetect', 'mdetsims']:
+        for lib in [__name__, 'ngmix', 'metadetect', 'coadd_mdetsims']:
             lgr = logging.getLogger(lib)
             hdr = logging.StreamHandler(sys.stdout)
             hdr.setFormatter(logging.Formatter(logging.BASIC_FORMAT))
@@ -70,7 +71,8 @@ def _add_shears(cfg, swap12, plus=True):
     cfg.update({'g1': g1, 'g2': g2})
 
 
-def _run_sim(seed, *, sim_config, shear_meas_config, swap12, cut_interp):
+def _run_sim(seed, *, sim_config, shear_meas_config,
+             swap12, cut_interp, sim_class):
     try:
         # pos shear
         rng = np.random.RandomState(seed=seed)
@@ -81,7 +83,7 @@ def _run_sim(seed, *, sim_config, shear_meas_config, swap12, cut_interp):
         else:
             assert sim_config['g1'] == 0.02
             assert sim_config['g2'] == 0.0
-        sim = CoaddingSim(rng=rng, **sim_config)
+        sim = sim_class(rng=rng, **sim_config)
 
         mbobs = sim.get_mbobs()
         md = Metadetect(shear_meas_config, mbobs, rng)
@@ -109,7 +111,7 @@ def _run_sim(seed, *, sim_config, shear_meas_config, swap12, cut_interp):
         else:
             assert sim_config['g1'] == -0.02
             assert sim_config['g2'] == 0.0
-        sim = CoaddingSim(rng=rng, **sim_config)
+        sim = sim_class(rng=rng, **sim_config)
 
         mbobs = sim.get_mbobs()
         md = Metadetect(shear_meas_config, mbobs, rng)
@@ -141,8 +143,10 @@ def _run_sim(seed, *, sim_config, shear_meas_config, swap12, cut_interp):
               help='RNG seed to init the sims.')
 @click.option('--output-file', default='data.fits', type=str,
               help='File to write outputs to.')
+@click.option('--serial', is_flag=True, default=False, type=bool,
+              help="Run all sims serially.")
 @click.argument('n_sims', type=int)
-def _main(n_sims, seed, output_file):
+def main(n_sims, seed, output_file, serial):
     """Run N_SIMS metadetect simulation patches and estimate the shear."""
 
     # logging and MPI/workers
@@ -153,12 +157,19 @@ def _main(n_sims, seed, output_file):
     (sim_config, run_config, shear_meas_config,
      swap12, cut_interp) = load_config('config.yaml')
 
+    use_old_sim = sim_config.pop('straight_to_coadd', False)
+    if use_old_sim:
+        sim_class = SimpleSim
+    else:
+        sim_class = CoaddingSim
+
     __run_sim = partial(
         _run_sim,
         sim_config=sim_config,
         shear_meas_config=shear_meas_config,
         swap12=swap12,
-        cut_interp=cut_interp)
+        cut_interp=cut_interp,
+        sim_class=sim_class)
 
     if rank == 0:
         print('running metadetect', flush=True)
@@ -168,6 +179,14 @@ def _main(n_sims, seed, output_file):
         print("n_ranks:", n_ranks, flush=True)
         print("n_workers:", n_workers, flush=True)
 
+        if use_old_sim:
+            print('sim type: straight-to-coadd')
+            assert False, (
+                "Straight-to-coadd sims are disbaled for safety! Remove this "
+                "assert if you actually want to use it!")
+        else:
+            print('sim type: full coadding')
+
     seeds = np.random.RandomState(seed=seed).randint(
         low=1,
         high=2**30,
@@ -175,10 +194,12 @@ def _main(n_sims, seed, output_file):
 
     if n_workers == 1:
         outputs = [__run_sim(seeds[0])]
+    elif serial:
+        outputs = [__run_sim(seed) for seed in seeds]
     else:
         if not use_mpi:
             pool = schwimmbad.JoblibPool(
-                n_workers, backend='multiprocessing', verbose=100)
+                n_workers, backend='multiprocessing', verbose=40)
         else:
             pool = schwimmbad.choose_pool(mpi=use_mpi, processes=n_workers)
 
@@ -219,7 +240,3 @@ s2n: {s2n}
             for s in ['p', 'm']:
                 ext = '%s%d' % (s, s2n)
                 fits.write(all_data[ext], extname=ext)
-
-
-if __name__ == '__main__':
-    _main()

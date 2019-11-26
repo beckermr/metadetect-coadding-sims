@@ -139,7 +139,7 @@ class CoaddingSim(object):
             g1=0.02, g2=0.0,
             dim=225, buff=25,
             noise=180,
-            ngal=150.0,
+            ngal=45.0,
             ngal_factor=None,
             n_bands=1,
             shear_scene=True,
@@ -398,6 +398,8 @@ class CoaddingSim(object):
              coadd_bmask, coadd_wgts) = self._add_noise_and_coadd(
                 band=band, wcs_objs=wcs_objs, se_images=se_images)
 
+            LOGGER.debug("coadd weights for band %d: %s", band, coadd_wgts)
+
             # coadd the PSFs
             coadd_psf = self._coadd_psfs(
                 band=band, wcs_objs=wcs_objs,
@@ -439,6 +441,8 @@ class CoaddingSim(object):
             return mbobs
 
     def _add_noise_and_coadd(self, *, band, wcs_objs, se_images):
+        LOGGER.info('coadding %d images for band %d',
+                    len(se_images), band)
         se_noises = []
         se_interp_fracs = []
         coadd_wgts = []
@@ -522,6 +526,9 @@ class CoaddingSim(object):
                 method=method,
                 offset=galsim.PositionD(x=dx, y=dy)).array.copy())
 
+        LOGGER.info('coadding %d PSF images for band %d',
+                    len(se_psfs), band)
+
         coadd_psf = coadd_psfs(
             se_psfs, psf_wcs_objs, coadd_wgts,
             self.scale, self._psf_dim)
@@ -537,6 +544,8 @@ class CoaddingSim(object):
                 dither_range=(0, 0))
             if self.wcs_kws is not None:
                 default_wcs_kws.update(self.wcs_kws)
+
+            LOGGER.info('using WCS kwargs %s', default_wcs_kws)
 
             se_cen = (self.se_dim - 1) / 2
             world_origin = galsim.PositionD(
@@ -558,6 +567,9 @@ class CoaddingSim(object):
                     ))
 
                 self._band_wcs_objs.append(wcs_objs)
+
+        LOGGER.info('found %d WCS objects for band %d',
+                    len(self._band_wcs_objs[band]), band)
 
         return self._band_wcs_objs[band]
 
@@ -625,6 +637,9 @@ class CoaddingSim(object):
 
         nobj = self._get_nobj()
 
+        LOGGER.info('drawing %d objects for a %f square arcmin patch',
+                    nobj, self.area_sqr_arcmin)
+
         if self.gal_grid is not None:
             self._gal_grid_ind = 0
 
@@ -681,12 +696,16 @@ class CoaddingSim(object):
                 self._psf_shears.append([
                     galsim.Shear(g1=g1, g2=g2) for g1, g2 in zip(g1s, g2s)])
 
+        LOGGER.debug('PSF fwhms for band %d: %s', band, self._psf_fwhms)
+        LOGGER.debug('PSF shears for band %d: %s', band, self._psf_shears)
+
         def _psf_model_func(*, x, y):
             if self.psf_type == 'gauss':
                 psf = galsim.Gaussian(
                     fwhm=self._psf_fwhms[band][epoch]
                 ).shear(
-                    self._psf_shears[band][epoch])
+                    self._psf_shears[band][epoch]
+                ).withFlux(1.0)
                 return psf
             # elif self.psf_type == 'wldeblend':
             #     return self._surveys[band].psf_model.dilate(

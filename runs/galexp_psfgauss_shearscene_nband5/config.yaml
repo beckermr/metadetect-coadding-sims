@@ -3,6 +3,7 @@ sim:
   psf_type: gauss
   shear_scene: True
   n_coadd: 1
+  n_bands: 5
   scale: 0.263
 
 run:

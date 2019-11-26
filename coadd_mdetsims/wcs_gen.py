@@ -1,5 +1,8 @@
+import logging
 import numpy as np
 import galsim
+
+LOGGER = logging.getLogger(__name__)
 
 
 def gen_affine_wcs(
@@ -16,7 +19,7 @@ def gen_affine_wcs(
         The range of position angles to select from for rotating the image
         WCS coordinares. In degrees.
     dither_range : 2-tuple of floats
-        The lowest and highest dither in world coordinates.
+        The lowest and highest dither in world coordinate pixels.
     scale : float
         The mean pixel scale of the image,
     scale_frac_std : float
@@ -65,6 +68,10 @@ def gen_affine_wcs(
     dvdx = jac_matrix[1, 0]
     dvdy = jac_matrix[1, 1]
     dxdy = np.dot(np.linalg.inv(jac_matrix), np.array([dither_u, dither_v]))
+
+    LOGGER.debug(
+        'making WCS with g1|g2|scale|theta|du|dv: % f|% f|% f|% f|% f|% f',
+        g1, g2, scale, theta, dither_u, dither_v)
 
     return galsim.AffineTransform(
         dudx, dudy, dvdx, dvdy,
