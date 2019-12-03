@@ -147,7 +147,7 @@ class CoaddingSim(object):
             shear_scene=True,
             wcs_kws=None,
             gal_grid=None,
-            gal_type='expvarsize',
+            gal_type='exp',
             gal_kws=None,
             psf_type='gauss',
             psf_kws=None):
