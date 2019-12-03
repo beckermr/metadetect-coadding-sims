@@ -5,6 +5,7 @@ sim:
   n_coadd: 5
   n_bands: 3
   scale: 0.263
+  ngal: 45.0
   wcs_kws:
     position_angle_range: [0, 360]
     scale_frac_std: 0.01
