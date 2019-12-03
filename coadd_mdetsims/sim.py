@@ -40,7 +40,7 @@ class CoaddingSim(object):
     buff : int, optional
         The width of the buffer region in the coadd image.
     noise : float or list of floats, optional
-        The noise for a single epoch image. Can be different per band.
+        The total noise for a single band. Can be different per band.
     ngal : float, optional
         The number of objects to simulate per arcminute.
     ngal_factor : float, optional
@@ -168,6 +168,7 @@ class CoaddingSim(object):
         self.psf_kws = psf_kws
         self.gal_kws = gal_kws
         self.noise = np.array(noise) * np.ones(n_bands)
+        self._se_noise = self.noise * np.sqrt(n_coadd)
         self.ngal_factor = ngal_factor
 
         self.area_sqr_arcmin = ((self.dim - 2*self.buff) * scale / 60)**2
@@ -449,8 +450,9 @@ class CoaddingSim(object):
         final_se_images = []
         for se_im in se_images:
             se_im += self.noise_rng.normal(
-                scale=self.noise[band], size=se_im.shape)
-            se_nse = self.noise_rng.normal(size=se_im.shape) * self.noise[band]
+                scale=self._se_noise[band], size=se_im.shape)
+            se_nse = (
+                self.noise_rng.normal(size=se_im.shape) * self._se_noise[band])
 
             # if self.mask_and_interp:
             #     final_se_im, se_nse, bad_msk = self._mask_and_interp(
@@ -464,7 +466,7 @@ class CoaddingSim(object):
             se_noises.append(se_nse)
             se_interp_fracs.append(se_interp_frac)
 
-            coadd_wgts.append(1.0 / self.noise[band]**2)
+            coadd_wgts.append(1.0 / self._se_noise[band]**2)
 
         coadd_wgts = np.array(coadd_wgts)
 
