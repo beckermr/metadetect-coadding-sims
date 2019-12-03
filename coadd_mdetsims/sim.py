@@ -123,8 +123,6 @@ class CoaddingSim(object):
     The valid kinds of galaxies are
 
         'exp' : Sersic objects at very high s/n with n = 1 and HLR=0.5 arcsec
-        'expvarsize' : Sersic objects at very high s/n with n = 1 and an HLR
-            selected uniformly from 0.25 to 0.75 arcseconds.
         # 'wldeblend' : a sample drawn from the WeakLensingDeblending package
 
     The valid kinds of PSFs are
@@ -141,7 +139,7 @@ class CoaddingSim(object):
             g1=0.02, g2=0.0,
             dim=225, buff=25,
             noise=180,
-            ngal=145.0,
+            ngal=80.0,
             ngal_factor=None,
             n_bands=1,
             shear_scene=True,
@@ -610,20 +608,6 @@ class CoaddingSim(object):
 
         return _gal
 
-    def _get_gal_expvarsize(self):
-        flux = 10**(0.4 * (30 - 18))
-        half_light_radius = self.rng.uniform(low=0.25, high=0.75)
-
-        _gal = []
-        for _ in range(self.n_bands):
-            obj = galsim.Sersic(
-                half_light_radius=half_light_radius,
-                n=1,
-            ).withFlux(flux)
-            _gal.append(obj)
-
-        return _gal
-
     # def _get_gal_wldeblend(self):
     #     rind = self.rng.choice(self._wldeblend_cat.size)
     #     angle = self.rng.uniform() * 360
@@ -667,8 +651,6 @@ class CoaddingSim(object):
             # get the galaxy
             if self.gal_type == 'exp':
                 gals = self._get_gal_exp()
-            elif self.gal_type == 'expvarsize':
-                gals = self._get_gal_expvarsize()
             # elif self.gal_type == 'wldeblend':
             #     gals = self._get_gal_wldeblend()
             else:
