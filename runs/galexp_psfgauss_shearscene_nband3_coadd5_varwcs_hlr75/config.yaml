@@ -1,0 +1,18 @@
+sim:
+  gal_type: exp
+  psf_type: gauss
+  shear_scene: True
+  n_coadd: 5
+  n_bands: 3
+  scale: 0.263
+  ngal: 80
+  wcs_kws:
+    position_angle_range: [0, 360]
+    scale_frac_std: 0.01
+    shear_std: 0.03
+    dither_range: [-0.5, 0.5]
+  gal_kws:
+    half_light_radius: 0.75
+
+run:
+  n_patches: 1000000

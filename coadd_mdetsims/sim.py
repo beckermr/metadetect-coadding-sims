@@ -598,13 +598,20 @@ class CoaddingSim(object):
 
     def _get_gal_exp(self):
         flux = 10**(0.4 * (30 - 18))
-        half_light_radius = 0.5
+        gal_kws = self.gal_kws or {}
+        defaults = {
+            'half_light_radius': 0.5,
+            'n': 1}
+        defaults.update(gal_kws)
+
+        LOGGER.info('exp gal kws: %s', defaults)
+
+        flux *= (defaults['half_light_radius']/0.5)
 
         _gal = []
         for _ in range(self.n_bands):
             obj = galsim.Sersic(
-                half_light_radius=half_light_radius,
-                n=1,
+                **defaults
             ).withFlux(flux)
             _gal.append(obj)
 
