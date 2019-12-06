@@ -10,4 +10,4 @@ sim:
     half_light_radius: 0.75
 
 run:
-  n_patches: 1000000
+  n_patches: 10000000
