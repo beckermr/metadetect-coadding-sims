@@ -2,9 +2,10 @@ sim:
   gal_type: exp
   psf_type: gauss
   shear_scene: True
-  n_coadd: 1
-  n_bands: 5
+  n_coadd: 5
   scale: 0.263
+  n_bands: 3
+  ngal: 80.0
 
 run:
   n_patches: 1000000

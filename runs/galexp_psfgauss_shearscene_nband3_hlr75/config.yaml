@@ -4,6 +4,10 @@ sim:
   shear_scene: True
   n_coadd: 1
   scale: 0.263
+  n_bands: 3
+  ngal: 80.0
+  gal_kws:
+    half_light_radius: 0.75
 
 run:
-  n_patches: 1000000
+  n_patches: 10000000
